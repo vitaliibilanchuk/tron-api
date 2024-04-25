@@ -1,17 +1,20 @@
 {
-    "name": "iexbase/tron-api",
+    "name": "vitaliibilanchuk/tron-api",
     "description": "A PHP API for interacting with Tron (Trx)",
     "license": "MIT",
     "type":   "library",
-    "homepage": "https://github.com/iexbase/tron-api",
+    "homepage": "https://github.com/vitaliibilanchuk/tron-api",
     "authors": [
         {
             "name": "Shamsudin Serderov",
             "email": "steein.shamsudin@gmail.com"
+        },
+        {
+            "name": "Vitalii Bilanchuk",
+            "email": "vitaly.bilanchuk@gmail.com"
         }
     ],
     "keywords": [
-        "iexbase",
         "tron-lib",
         "tron-php",
         "tron-api",
