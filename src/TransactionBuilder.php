@@ -592,12 +592,14 @@ return $trc20;
         ]);
         $parameters = substr($eth_abi->encodeParameters($func_abi, $params),2);
 
-        $result = $this->tron->getManager()->request('wallet/triggerconstantcontract', [
+        $args = [
             'contract_address' => $contract,
             'function_selector' => $signature,
             'parameter' => $parameters,
             'owner_address' =>  $address,
-        ]);
+        ];
+
+        $result = $this->tron->getManager()->request('wallet/triggerconstantcontract', $args);
 
         if(!isset($result['result'])){
             throw new TronException('No result field in response. Raw response:'.print_r($result,true));

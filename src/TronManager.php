@@ -200,4 +200,16 @@ class TronManager
 
         return $array;
     }
+
+    /**
+     *  Find transaction
+     *
+     * @param string $transaction_id
+     * @return array
+     * @throws TronException
+     */
+    public function getTransaction(string $transaction_id): array
+    {
+        return $this->request('/wallet/gettransactioninfobyid', ['value' => $transaction_id], 'post');
+    }
 }

@@ -2,14 +2,6 @@
 
 /**
  * TronAPI
- *
- * @author  Shamsudin Serderov <steein.shamsudin@gmail.com>
- * @license https://github.com/iexbase/tron-api/blob/master/LICENSE (MIT License)
- * @version 1.3.4
- * @link    https://github.com/iexbase/tron-api
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
  */
 
 declare(strict_types=1);
@@ -24,7 +16,7 @@ use IEXBase\TronAPI\Exception\TronException;
  * Class TRC20Contract
  * @package TronAPI
  */
-class TRC20Contract
+class TRC20Contract extends TBaseContract
 {
     const TRX_TO_SUN = 1000000;
 
@@ -50,32 +42,11 @@ class TRC20Contract
     private ?string $_symbol = null;
 
     /**
-     * The smart contract which issued TRC20 Token
-     *
-     * @var string
-    */
-    private string $contractAddress;
-
-    /**
-     * ABI Data
-     *
-     * @var string|null
-    */
-    private $abiData;
-
-    /**
      * Fee Limit
      *
      * @var integer
      */
     private int $feeLimit = 10;
-
-    /**
-     * Base Tron object
-     *
-     * @var Tron
-     */
-    protected Tron $_tron;
 
     /**
      * Total Supply
@@ -85,23 +56,14 @@ class TRC20Contract
     private ?string $_totalSupply = null;
 
     /**
-     * Create Trc20 Contract
+     * Constructor
      *
      * @param Tron $tron
      * @param string $contractAddress
-     * @param string|null $abi
      */
-    public function __construct(Tron $tron, string $contractAddress, string $abi = null)
+    public function __construct(Tron $tron, string $contractAddress)
     {
-        $this->_tron = $tron;
-
-        // If abi is absent, then it takes by default
-        if(is_null($abi)) {
-            $abi = file_get_contents(__DIR__.'/trc20.json');
-        }
-
-        $this->abiData = json_decode($abi, true);
-        $this->contractAddress = $contractAddress;
+        parent::__construct($tron, $contractAddress, null, __DIR__ . "/trc20.json");
     }
 
     /**
@@ -248,9 +210,9 @@ class TRC20Contract
     public function balanceOf(string $address = null, bool $scaled = true): string
     {
         if(is_null($address))
-            $address = $this->_tron->address['base58'];
+            $address = $this->getTron()->address['base58'];
 
-        $addr = str_pad($this->_tron->address2HexString($address), 64, "0", STR_PAD_LEFT);
+        $addr = str_pad($this->getTron()->address2HexString($address), 64, "0", STR_PAD_LEFT);
         $result = $this->trigger('balanceOf', $address, [$addr]);
         $balance = $result[0]->toString();
 
@@ -276,7 +238,7 @@ class TRC20Contract
     public function transfer(string $to, string $amount, string $from = null): array
     {
         if($from == null) {
-            $from = $this->_tron->address['base58'];
+            $from = $this->getTron()->address['base58'];
         }
 
         $feeLimitInSun = bcmul((string)$this->feeLimit, (string)self::TRX_TO_SUN);
@@ -289,18 +251,18 @@ class TRC20Contract
 
         $tokenAmount = bcmul($amount, bcpow("10", (string)$this->decimals(), 0), 0);
 
-        $transfer = $this->_tron->getTransactionBuilder()
+        $transfer = $this->getTron()->getTransactionBuilder()
             ->triggerSmartContract(
                 $this->abiData,
-                $this->_tron->address2HexString($this->contractAddress),
+                $this->getTron()->address2HexString($this->getAddress()),
                 'transfer',
-                [$this->_tron->address2HexString($to), $tokenAmount],
+                [$this->getTron()->address2HexString($to), $tokenAmount],
                 $feeLimitInSun,
-                $this->_tron->address2HexString($from)
+                $this->getTron()->address2HexString($from)
             );
 
-        $signedTransaction = $this->_tron->signTransaction($transfer);
-        $response = $this->_tron->sendRawTransaction($signedTransaction);
+        $signedTransaction = $this->getTron()->signTransaction($transfer);
+        $response = $this->getTron()->sendRawTransaction($signedTransaction);
 
         return array_merge($response, $signedTransaction);
     }
@@ -316,19 +278,8 @@ class TRC20Contract
      */
     public function getTransactions(string $address, int $limit = 100): array
     {
-        return $this->_tron->getManager()
-            ->request("v1/accounts/{$address}/transactions/trc20?limit={$limit}&contract_address={$this->contractAddress}", [], 'get');
-    }
-
-    /**
-     * Get transaction info by contract address
-     *
-     * @throws TronException
-     */
-    public function getTransactionInfoByContract(array $options = []): array
-    {
-        return $this->_tron->getManager()
-            ->request("v1/contracts/{$this->contractAddress}/transactions?".http_build_query($options), [],'get');
+        return $this->getTron()->getManager()
+            ->request("v1/accounts/{$address}/transactions/trc20?limit={$limit}&contract_address={$this->getAddress()}", [], 'get');
     }
 
     /**
@@ -338,38 +289,8 @@ class TRC20Contract
      */
     public function getTRC20TokenHolderBalance(array $options = []): array
     {
-        return $this->_tron->getManager()
-            ->request("v1/contracts/{$this->contractAddress}/tokens?".http_build_query($options), [],'get');
-    }
-
-    /**
-     *  Find transaction
-     *
-     * @param string $transaction_id
-     * @return array
-     * @throws TronException
-     */
-    public function getTransaction(string $transaction_id): array
-    {
-        return $this->_tron->getManager()
-            ->request('/wallet/gettransactioninfobyid', ['value' => $transaction_id], 'post');
-    }
-
-    /**
-     * Config trigger
-     *
-     * @param $function
-     * @param null $address
-     * @param array $params
-     * @return mixed
-     * @throws TronException
-     */
-    private function trigger($function, $address = null, array $params = [])
-    {
-        $owner_address = is_null($address) ? '410000000000000000000000000000000000000000' : $this->_tron->address2HexString($address);
-
-        return $this->_tron->getTransactionBuilder()
-            ->triggerConstantContract($this->abiData, $this->_tron->address2HexString($this->contractAddress), $function, $params, $owner_address);
+        return $this->getTron()->getManager()
+            ->request("v1/contracts/{$this->getAddress()}/tokens?".http_build_query($options), [],'get');
     }
 
     /**
