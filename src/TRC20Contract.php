@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 namespace IEXBase\TronAPI;
 
-use Comely\DataTypes\BcNumber;
 use IEXBase\TronAPI\Exception\TRC20Exception;
 use IEXBase\TronAPI\Exception\TronException;
 
@@ -158,7 +157,7 @@ class TRC20Contract extends TBaseContract
      * @throws Exception\TronException
      * @throws TRC20Exception
      */
-    public function totalSupply(bool $scaled = true): string
+    public function totalSupply(): string
     {
         if (!$this->_totalSupply) {
 
@@ -172,7 +171,7 @@ class TRC20Contract extends TBaseContract
             $this->_totalSupply = $totalSupply;
         }
 
-        return $scaled ? $this->decimalValue($this->_totalSupply, $this->decimals()) : $this->_totalSupply;
+        return $this->_totalSupply;
     }
 
     /**
@@ -207,7 +206,7 @@ class TRC20Contract extends TBaseContract
      * @throws TRC20Exception
      * @throws TronException
      */
-    public function balanceOf(string $address = null, bool $scaled = true): string
+    public function balanceOf(string $address = null): string
     {
         if(is_null($address))
             $address = $this->getTron()->address['base58'];
@@ -222,7 +221,7 @@ class TRC20Contract extends TBaseContract
             );
         }
 
-        return $scaled ? $this->decimalValue($balance, $this->decimals()) : $balance;
+        return $balance;
     }
 
     /**
@@ -291,16 +290,6 @@ class TRC20Contract extends TBaseContract
     {
         return $this->getTron()->getManager()
             ->request("v1/contracts/{$this->getAddress()}/tokens?".http_build_query($options), [],'get');
-    }
-
-    /**
-     * @param string $int
-     * @param int $scale
-     * @return string
-     */
-    protected function decimalValue(string $int, int $scale = 18): string
-    {
-        return (new BcNumber($int))->divide(pow(10, $scale), $scale)->value();
     }
 
     /**
