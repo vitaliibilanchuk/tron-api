@@ -14,6 +14,12 @@
             "email": "vitaly.bilanchuk@gmail.com"
         }
     ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/kornrunner/php-secp256k1"
+        }
+    ],
     "keywords": [
         "tron-lib",
         "tron-php",
@@ -25,7 +31,7 @@
         "php": ">=8.0",
         "guzzlehttp/guzzle": "^7.2",
         "vitaliibilanchuk/web3.php": "dev-master",
-        "kornrunner/secp256k1": "^0.2",
+        "kornrunner/secp256k1": "dev-master",
         "simplito/elliptic-php": "^1.0",
         "ext-json": "*",
         "ext-bcmath": "*"
