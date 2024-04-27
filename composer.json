@@ -31,7 +31,7 @@
         "php": ">=8.0",
         "guzzlehttp/guzzle": "^7.2",
         "vitaliibilanchuk/web3.php": "dev-master",
-        "kornrunner/secp256k1": "dev-master",
+        "kornrunner/secp256k1": "dev-main",
         "simplito/elliptic-php": "^1.0",
         "ext-json": "*",
         "ext-bcmath": "*"
